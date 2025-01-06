@@ -4,7 +4,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.tools.bzip2.CBZip2InputStream;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 
 public class Bzip2Node extends Node {
 
@@ -23,7 +23,7 @@ public class Bzip2Node extends Node {
 		}
 		InputStream fileInput = new FileInputStream(model.getZipPath());
 		fileInput.skip(2);
-		return new CBZip2InputStream(fileInput);
+		return new BZip2CompressorInputStream(fileInput);
 	}
 
 }

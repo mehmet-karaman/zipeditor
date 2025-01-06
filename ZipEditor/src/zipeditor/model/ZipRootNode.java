@@ -21,15 +21,15 @@ public class ZipRootNode extends RootNode {
 
 	public Object accept(NodeVisitor visitor, Object argument) throws IOException {
 		// this is relevant when saving to a previously empty file
-		if (model.getZipPath().length() > 0)
-			zipFile = new ZipFile(model.getZipPath());
-		try {
+//		if (model.getZipPath().length() > 0)
+//			zipFile = new ZipFile(model.getZipPath());
+//		try {
 			return super.accept(visitor, argument);
-		} finally {
-			if (zipFile != null)
-				zipFile.close();
-			zipFile = null;
-		}
+//		} finally {
+//			if (zipFile != null)
+//				zipFile.close();
+//			zipFile = null;
+//		}
 	}
 
 	public Node create(ZipModel model, String name, boolean isFolder) {

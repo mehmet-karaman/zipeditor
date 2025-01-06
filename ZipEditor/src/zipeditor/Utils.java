@@ -4,6 +4,7 @@
  */
 package zipeditor;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -13,6 +14,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.compress.archivers.zip.ZipMethod;
+import org.apache.commons.compress.compressors.zstandard.ZstdCompressorInputStream;
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IFile;
@@ -46,6 +49,7 @@ import org.eclipse.ui.part.FileEditorInput;
 
 import zipeditor.actions.IPostOpenProcessor;
 import zipeditor.model.Node;
+import zipeditor.model.ZipNode;
 import zipeditor.operations.ExtractOperation;
 import zipeditor.operations.OpenFileOperation;
 
@@ -257,7 +261,7 @@ public class Utils {
 				out.close();
 		}
 	}
-	
+
 	public static boolean allNodesAreFileNodes(IStructuredSelection selection) {
 		for (Iterator it = selection.iterator(); it.hasNext();) {
 			Object object = it.next();
@@ -311,6 +315,25 @@ public class Utils {
 		return null;
 	}
 
+	public static byte[] zstdDecompress(ZipNode zipNode, InputStream compressed) {
+		try (var t = new ZstdCompressorInputStream(compressed)){
+			long compressedSize = zipNode.getSize();
+			byte[] allBytes = t.readNBytes((int) compressedSize);
+			return allBytes;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return new byte[0];
+	}
+	
 	private Utils() {
 	}
+
+	public static boolean isZSDT(Node node) {
+		if (node instanceof ZipNode zipNode) {
+			return zipNode.getMethod() == ZipMethod.ZSTD.getCode();
+		}
+		return false;
+	}
+
 }

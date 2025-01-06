@@ -6,17 +6,17 @@ package zipeditor.model;
 
 import java.io.IOException;
 
-import org.apache.tools.tar.TarInputStream;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 
 public class TarRootNode extends RootNode {
 
-	private TarInputStream in;
+	private TarArchiveInputStream in;
 
 	public TarRootNode(ZipModel model) {
 		super(model);
 	}
 
-	TarInputStream getInputStream() {
+	TarArchiveInputStream getInputStream() {
 		return in;
 	}
 

@@ -9,6 +9,11 @@ import java.io.FileOutputStream;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.compress.archivers.zip.ZipMethod;
+import org.apache.commons.compress.compressors.zstandard.ZstdCompressorInputStream;
+import org.apache.commons.io.build.AbstractStreamBuilder;
+import org.apache.commons.io.input.BoundedInputStream;
+import org.apache.commons.io.input.BoundedInputStream.Builder;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -27,6 +32,7 @@ import zipeditor.model.Node;
 import zipeditor.model.NodeVisitor;
 import zipeditor.model.RootNode;
 import zipeditor.model.ZipModel;
+import zipeditor.model.ZipNode;
 
 public class ExtractOperation {
 	private class ExtractJob extends Job {
@@ -172,7 +178,7 @@ public class ExtractOperation {
 				try {
 					extracting.add(file);
 					long time = System.currentTimeMillis();
-					Utils.readAndWrite(node.getContent(), new FileOutputStream(file), true);
+						node.getContent().transferTo(new FileOutputStream(file));
 					if (ZipEditorPlugin.DEBUG)
 						System.out.println("Extracted " + node + " in " + (System.currentTimeMillis() - time) + "ms"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				} catch (Exception e) {

@@ -10,22 +10,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 
-import org.apache.tools.bzip2.CBZip2InputStream;
-import org.apache.tools.tar.TarEntry;
-import org.apache.tools.tar.TarInputStream;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 
 import zipeditor.model.ZipContentDescriber.ContentTypeId;
 
 public class TarNode extends Node {
 	private class EntryStream extends FilterInputStream {
 		private boolean close;
-		private EntryStream(TarInputStream in) {
+		private EntryStream(TarArchiveInputStream in) {
 			super(in);
 		}
-		private EntryStream(TarEntry entry, TarInputStream in) throws IOException {
+		private EntryStream(TarArchiveEntry entry, TarArchiveInputStream in) throws IOException {
 			super(in);
 			close = true;
-			for (TarEntry e = null; (e = in.getNextEntry()) != null; ) {
+			for (TarArchiveEntry e = null; (e = in.getNextEntry()) != null; ) {
 				if (!entry.equals(e))
 					continue;
 				break;
@@ -37,14 +37,14 @@ public class TarNode extends Node {
 		}
 	};
 
-	private TarEntry tarEntry;
+	private TarArchiveEntry tarEntry;
 	private int groupId;
 	private String groupName = new String();
 	private int userId;
 	private String userName = new String();
 	private int mode;
 
-	public TarNode(ZipModel model, TarEntry entry, String name, boolean isFolder) {
+	public TarNode(ZipModel model, TarArchiveEntry entry, String name, boolean isFolder) {
 		this(model, name, isFolder);
 		tarEntry = entry;
 		if (tarEntry != null) {
@@ -65,9 +65,9 @@ public class TarNode extends Node {
 
 	public Object accept(NodeVisitor visitor, Object argument) throws IOException {
 		TarRootNode rootNode = (TarRootNode) model.getRoot();
-		TarInputStream tarStream = rootNode.getInputStream();
+		var tarStream = rootNode.getInputStream();
 		if (tarStream != null && tarEntry != null) {
-			TarEntry entry = tarStream.getNextEntry();
+			TarArchiveEntry entry = tarStream.getNextEntry();
 			if (!tarEntry.equals(entry)) {
 				// when something has been added to or removed from the node tree
 				do
@@ -166,7 +166,7 @@ public class TarNode extends Node {
 			return in;
 		if (tarEntry != null) {
 			TarRootNode rootNode = (TarRootNode) model.getRoot();
-			TarInputStream tarStream = rootNode.getInputStream();
+			TarArchiveInputStream tarStream = rootNode.getInputStream();
 			if (tarStream != null)
 				return new EntryStream(tarStream);
 			if (model.getZipPath() != null)
@@ -175,17 +175,17 @@ public class TarNode extends Node {
 		return null;
 	}
 
-	static TarInputStream getTarFile(ZipModel model) throws IOException {
+	static TarArchiveInputStream getTarFile(ZipModel model) throws IOException {
 		switch (model.getType().getOrdinal()) {
 		default:
 		case ContentTypeId.TAR:
-			return new TarInputStream(new FileInputStream(model.getZipPath()));
+			return new TarArchiveInputStream(new FileInputStream(model.getZipPath()));
 		case ContentTypeId.TGZ:
-			return new TarInputStream(new GZIPInputStream(new FileInputStream(model.getZipPath())));
+			return new TarArchiveInputStream(new GZIPInputStream(new FileInputStream(model.getZipPath())));
 		case ContentTypeId.TBZ:
 				InputStream in = new FileInputStream(model.getZipPath());
 				in.skip(2);
-				return new TarInputStream(new CBZip2InputStream(in));
+				return new TarArchiveInputStream(new BZip2CompressorInputStream(in));
 		}
 	}
 
@@ -197,10 +197,10 @@ public class TarNode extends Node {
 	}
 	
 	public void update(Object entry) {
-		if (!(entry instanceof TarEntry))
+		if (!(entry instanceof TarArchiveInputStream))
 			return;
-		TarEntry tarEntry = (TarEntry) entry;
-		time = tarEntry.getModTime().getTime();
+		TarArchiveInputStream tarEntry = (TarArchiveInputStream) entry;
+		time = tarEntry.getCurrentEntry().getModTime().getTime();
 	}
 
 	public Node create(ZipModel model, String name, boolean isFolder) {
