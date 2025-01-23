@@ -1,9 +1,13 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
+Automatic-Module-Name: %Bundle-Name.0
 Bundle-Name: %Bundle-Name.0
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Bundle-SymbolicName: ZipEditor;singleton:=true
 Bundle-Version: 1.1.9.qualifier
 Bundle-Activator: zipeditor.ZipEditorPlugin
+Bundle-ClassPath: .,
+ lib/zstd-jni-1.5.6-9.jar
 Bundle-Localization: plugin
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.core.resources,
@@ -15,8 +19,10 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.ui.editors,
  org.eclipse.ui.views,
  org.eclipse.search,
- org.apache.ant
-Eclipse-LazyStart: true
+ org.apache.ant,
+ commons-compress;bundle-version="1.28.0",
+ org.apache.commons.commons-io
+Bundle-ActivationPolicy: lazy
 Bundle-Vendor: %Bundle-Vendor.0
 Export-Package: zipeditor,
  zipeditor.model,

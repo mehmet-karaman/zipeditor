@@ -20,8 +20,12 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.apache.commons.compress.archivers.zip.ZipMethod;
+import org.apache.commons.compress.compressors.zstandard.ZstdUtils;
 import org.apache.tools.bzip2.CBZip2InputStream;
 import org.apache.tools.bzip2.CBZip2OutputStream;
 import org.apache.tools.tar.TarConstants;
@@ -102,7 +106,7 @@ public class ZipModel {
 			contents.reset();
 			if (count == -1)
 				return null;
-			ZipInputStream zip = new ZipInputStream(contents);
+			ZipArchiveInputStream zip = new ZipArchiveInputStream(contents);
 			if (zip.getNextEntry() != null) {
 				contents.reset();
 				return ContentTypeId.ZIP_FILE;
@@ -284,7 +288,7 @@ public class ZipModel {
 	}
 
 	private void readStream(InputStream zipStream, IModelInitParticipant participant, Node stopNode) {
-		ZipEntry zipEntry = null;
+		ZipArchiveEntry zipEntry = null;
 		TarEntry tarEntry = null;
 		RpmEntry rpmEntry = null;
 		state |= INIT_STARTED;
@@ -295,8 +299,8 @@ public class ZipModel {
 				break;
 			}
 			try {
-				if (zipStream instanceof ZipInputStream)
-					zipEntry = ((ZipInputStream) zipStream).getNextEntry();
+				if (zipStream instanceof ZipArchiveInputStream zipArcInpStream)
+					zipEntry = zipArcInpStream.getNextEntry();
 				else if (zipStream instanceof TarInputStream)
 					tarEntry = ((TarInputStream) zipStream).getNextEntry();
 				else if (zipStream instanceof RpmInputStream)
@@ -428,7 +432,7 @@ public class ZipModel {
 		default:
 			return in;
 		case ContentTypeId.ZIP:
-			return new ZipInputStream(in);
+			return new ZipArchiveInputStream(in);
 		case ContentTypeId.TAR:
 			return new TarInputStream(in);
 		case ContentTypeId.GZ:
@@ -462,7 +466,7 @@ public class ZipModel {
 				out = new TarOutputStream(new GZIPOutputStream(out));
 				break;
 			case ContentTypeId.ZIP:
-				out = new ZipOutputStream(out);
+				out = new ZipArchiveOutputStream(tmpFile);
 				break;
 			case ContentTypeId.TBZ:
 				out.write(new byte[] { 'B', 'Z' });
@@ -497,16 +501,18 @@ public class ZipModel {
 				return;
 			entryName = node.getPath();
 		}
-		ZipEntry zipEntry = type == ContentTypeId.ZIP_FILE ? new ZipEntry(entryName) : null;
+		ZipArchiveEntry zipEntry = type == ContentTypeId.ZIP_FILE ? new ZipArchiveEntry(entryName) : null;
 		TarEntry tarEntry = type == ContentTypeId.TAR_FILE || type == ContentTypeId.TGZ_FILE ||
 				type == ContentTypeId.TBZ_FILE ? new TarEntry(entryName) : null;
 		if (zipEntry != null) {
 			zipEntry.setTime(node.getTime());
-			if (node instanceof ZipNode) {
+			if (node instanceof ZipNode zipNode) {
 				monitor.subTask(entryName);
-				zipEntry.setComment(((ZipNode) node).getComment());
-				zipEntry.setMethod(((ZipNode) node).getMethod());
-				if (zipEntry.getMethod() == ZipEntry.STORED) {
+				zipEntry.setComment(zipNode.getComment());
+				zipEntry.setMethod(zipNode.getMethod());
+				if (zipNode.getMethod() == ZipMethod.ZSTD.getCode()) {
+					handleCrc(node, entryName, zipEntry);
+				} else if (zipEntry.getMethod() == ZipEntry.STORED) {
 					handleCrc(node, entryName, zipEntry);
 				}
 			}
@@ -525,11 +531,18 @@ public class ZipModel {
 			}
 		}
 		
-		if (out instanceof ZipOutputStream)
-			((ZipOutputStream) out).putNextEntry(zipEntry);
+		if (out instanceof ZipArchiveOutputStream)
+			((ZipArchiveOutputStream) out).putArchiveEntry(zipEntry);
 		else if (out instanceof TarOutputStream)
 			((TarOutputStream) out).putNextEntry(tarEntry);
-		Utils.readAndWrite(node.getContent(), out, false);
+		if (node instanceof ZipNode zipNode && zipNode.getMethod() == ZipMethod.ZSTD.getCode()) {
+			ZstdUtils.readAndCompressWrite(node.getContent(), out);
+		} else {
+			Utils.readAndWrite(node.getContent(), out, false);
+		}
+		if (zipEntry != null) {
+			((ZipArchiveOutputStream)out).closeArchiveEntry();
+		}
 		if (tarEntry != null)
 			((TarOutputStream) out).closeEntry();
 		monitor.worked(1);

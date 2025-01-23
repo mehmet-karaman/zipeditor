@@ -172,7 +172,7 @@ public class ExtractOperation {
 				try {
 					extracting.add(file);
 					long time = System.currentTimeMillis();
-					Utils.readAndWrite(node.getContent(), new FileOutputStream(file), true);
+					node.getContent().transferTo(new FileOutputStream(file));
 					if (ZipEditorPlugin.DEBUG)
 						System.out.println("Extracted " + node + " in " + (System.currentTimeMillis() - time) + "ms"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				} catch (Exception e) {
