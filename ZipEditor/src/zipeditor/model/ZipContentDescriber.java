@@ -125,12 +125,13 @@ public class ZipContentDescriber implements IContentDescriber {
 	}
 
 	public static boolean matchesFileSpec(String name, List fileNames, List fileExtension) {
+		String lowerCaseName = name.toLowerCase();
 		for (int i = 0; i < fileNames.size(); i++) {
-			if (name.equals(fileNames.get(i)))
+			if (lowerCaseName.equals(fileNames.get(i)))
 				return true;
 		}
 		for (int i = 0; i < fileExtension.size(); i++) {
-			if (name.endsWith("." + fileExtension.get(i))) //$NON-NLS-1$
+			if (lowerCaseName.endsWith("." + fileExtension.get(i))) //$NON-NLS-1$
 				return true;
 		}
 		return false;
