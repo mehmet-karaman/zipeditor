@@ -43,10 +43,9 @@ public class FileAdapter implements IAdaptable {
 	}
 
 	private IFileStore extractNode() {
-		ExtractOperation operation = new ExtractOperation();
 		File path = fNode instanceof PlainNode
 				? fNode.getModel().getZipPath().getAbsoluteFile()
-				: operation.extract(fNode, fNode.getModel().getTempDir(), true, new NullProgressMonitor());
+				: new ExtractOperation().extract(fNode, fNode.getModel().getTempDir(), true, new NullProgressMonitor());
 		return Utils.getFileStore(path);
 	}
 
