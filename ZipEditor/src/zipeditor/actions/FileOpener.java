@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.tools.ant.types.Commandline;
 import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -135,6 +136,7 @@ public class FileOpener {
 		int dotIndex = file.getName().lastIndexOf('.');
 		String nameWithoutExt = file.getName().substring(0, dotIndex != -1 ? dotIndex : file.getName().length());
 		commandString = replaceAll(commandString, "$n", nameWithoutExt); //$NON-NLS-1$
+		commandString = replaceAll(commandString, "$t", System.getProperty("java.io.tmpdir")); //$NON-NLS-1$ //$NON-NLS-2$
 		if (commandString.equals(editor.getPath()))
 			commandString += ' ' + file.toString();
 		String outCommand = null;
@@ -150,7 +152,8 @@ public class FileOpener {
 			ext = ext.substring(0, endIndex == -1 ? ext.length() : endIndex);
 			commandString = commandString.substring(0, extIndex) + commandString.substring(commandString.indexOf(ext) + ext.length());
 		}
-		Process process = Runtime.getRuntime().exec(commandString);
+		String[] commandline = Commandline.translateCommandline(commandString);
+		Process process = Runtime.getRuntime().exec(commandline);
 		if (outCommand == null)
 			return;
 		final InputStream stdIn = process.getInputStream();
@@ -164,6 +167,7 @@ public class FileOpener {
 				if (editorId.indexOf(' ') != -1)
 					editorId = editorId.substring(0, editorId.indexOf(' ')).trim();
 			}
+			String[] outCommandParts = outCommand.trim().split("\\s+"); //$NON-NLS-1$
 			final File dir = new File(file.getParent().toURI());
 			final File tmpFile = new File(dir, nameWithoutExt + ext);
 			final FileOutputStream out = new FileOutputStream(tmpFile);
@@ -192,7 +196,8 @@ public class FileOpener {
 			out.flush();
 			if (out.getChannel().isOpen())
 				out.close();
-			fPage.openEditor(Utils.createEditorInput(Utils.getFileStore(tmpFile)), editorId);
+			File fileToOpen = outCommandParts.length > 2 ? new File(outCommandParts[outCommandParts.length - 1]) : tmpFile;
+			fPage.openEditor(Utils.createEditorInput(Utils.getFileStore(fileToOpen)), editorId);
 		} else {
 			Process outCommandProcess = Runtime.getRuntime().exec(outCommand);
 			BufferedOutputStream out = new BufferedOutputStream(outCommandProcess.getOutputStream());
