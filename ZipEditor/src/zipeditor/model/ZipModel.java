@@ -564,9 +564,6 @@ public class ZipModel {
 		if (zipEntry != null) {
 			((ZipArchiveOutputStream)out).closeArchiveEntry();
 		}
-		if (zipEntry != null) {
-			((ZipArchiveOutputStream)out).closeArchiveEntry();
-		}			
 		if (tarEntry != null)
 			((TarOutputStream) out).closeEntry();
 		monitor.worked(1);
