@@ -6,6 +6,7 @@ package zipeditor;
 
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
+import org.eclipse.jface.viewers.ILazyTreeContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.TableViewer;
@@ -63,9 +64,11 @@ public class TableViewerFrameSource implements IFrameSource {
 
 	protected Frame getParentFrame(int flags) {
 		Object input = fViewer.getInput();
-		ITreeContentProvider provider = (ITreeContentProvider) fViewer
-				.getContentProvider();
-		Object parent = provider.getParent(input);
+		Object parent = null;
+		if (fViewer.getContentProvider() instanceof ILazyTreeContentProvider)
+			parent = ((ILazyTreeContentProvider) fViewer.getContentProvider()).getParent(input);
+		if (fViewer.getContentProvider() instanceof ITreeContentProvider)
+			parent = ((ITreeContentProvider) fViewer.getContentProvider()).getParent(input);
 		if (parent == null) {
 			return null;
 		} else {

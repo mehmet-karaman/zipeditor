@@ -4,16 +4,21 @@
  */
 package zipeditor;
 
+import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.jface.viewers.IElementComparer;
 import org.eclipse.jface.viewers.IIndexableLazyContentProvider;
+import org.eclipse.jface.viewers.ILazyTreeContentProvider;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.viewers.ViewerFilter;
 
-public class LazyZipContentProvider extends ZipContentProvider implements IIndexableLazyContentProvider {
+import zipeditor.model.Node;
 
-	private TableViewer fTableViewer;
+public class LazyZipContentProvider extends ZipContentProvider implements IIndexableLazyContentProvider, ILazyTreeContentProvider {
+
+	private ColumnViewer fViewer;
 	private Object[] fRootChildren;
 
 	public LazyZipContentProvider(int mode) {
@@ -21,7 +26,7 @@ public class LazyZipContentProvider extends ZipContentProvider implements IIndex
 	}
 
 	public int findElement(Object element) {
-		IElementComparer comparer = fTableViewer.getComparer();
+		IElementComparer comparer = fViewer.getComparer();
 		for (int i = 0; i < fRootChildren.length; i++) {
 			if (comparer.equals(fRootChildren[i], element))
 				return i;
@@ -31,17 +36,36 @@ public class LazyZipContentProvider extends ZipContentProvider implements IIndex
 
 	public void updateElement(int index) {
 		if (index < fRootChildren.length)
-			fTableViewer.replace(fRootChildren[index], index);
+			((TableViewer) fViewer).replace(fRootChildren[index], index);
+	}
+
+	@Override
+	public void updateElement(Object parent, int index) {
+		if (parent instanceof Node) {
+			Node[] children = ((Node) parent).getChildren();
+			Node child = children[index];
+			((TreeViewer) fViewer).replace(parent, index, child);
+			updateChildCount(child, -1);
+		}
+	}
+
+	@Override
+	public void updateChildCount(Object element, int currentChildCount) {
+		if (element instanceof Node) {
+			int count = ((Node) element).getChildren().length;
+			if (count != currentChildCount)
+				((TreeViewer) fViewer).setChildCount(element, count);
+		}
 	}
 
 	public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
 		super.inputChanged(viewer, oldInput, newInput);
 
-		if (viewer instanceof TableViewer && newInput != null) {
-			fTableViewer = (TableViewer) viewer;
+		if (viewer instanceof ColumnViewer && newInput != null) {
+			fViewer = (ColumnViewer) viewer;
 			refreshCachedElements(newInput);
 		} else {
-			fTableViewer = null;
+			fViewer = null;
 		}
 	}
 
@@ -51,16 +75,16 @@ public class LazyZipContentProvider extends ZipContentProvider implements IIndex
 	}
 
 	public void refreshCachedElements(Object input) {
-		if (fTableViewer != null) {
+		if (fViewer instanceof TableViewer) {
 			fRootChildren = getChildren(input);
-			fTableViewer.setItemCount(fRootChildren.length);
-			ViewerFilter[] filters = fTableViewer.getFilters();
+			((TableViewer) fViewer).setItemCount(fRootChildren.length);
+			ViewerFilter[] filters = fViewer.getFilters();
 			for (int i = 0; i < filters.length; i++) {
-				fRootChildren = filters[i].filter(fTableViewer, input, fRootChildren);
+				fRootChildren = filters[i].filter(fViewer, input, fRootChildren);
 			}
-			ViewerComparator sorter = fTableViewer.getComparator();
+			ViewerComparator sorter = fViewer.getComparator();
 			if (sorter != null)
-				sorter.sort(fTableViewer, fRootChildren);
+				sorter.sort(fViewer, fRootChildren);
 		}
 	}
 }

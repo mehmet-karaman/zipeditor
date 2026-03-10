@@ -163,7 +163,7 @@ public class ZipEditor extends EditorPart implements IPropertyChangeListener, IE
 			fModelChangeEvent = event;
 			long scheduleTime = 0;
 			if (event.isInitializing() && !event.isInitStarted() && !event.isInitFinished())
-				scheduleTime = 2000;
+				scheduleTime = 1000;
 			if (event.isInitFinished()) {
 				Job[] jobs = Job.getJobManager().find(jobFamily);
 				if (jobs != null) {
@@ -181,7 +181,7 @@ public class ZipEditor extends EditorPart implements IPropertyChangeListener, IE
 		}
 		
 		public IStatus runInUIThread(IProgressMonitor monitor) {
-			if (!monitor.isCanceled())
+			if (!monitor.isCanceled() && fActions != null) // not disposed
 				doRun();
 			fModelChangeEvent = null;
 			return Status.OK_STATUS;
@@ -194,10 +194,7 @@ public class ZipEditor extends EditorPart implements IPropertyChangeListener, IE
 				fZipViewer.getControl().setRedraw(true);
 			}
 			if (fOutlinePage != null && !fOutlinePage.getControl().isDisposed()) {
-				if (fOutlinePage.getInput() == null)
-					fOutlinePage.setInput(fModel.getRoot());
-				else
-					fOutlinePage.refresh();
+				fOutlinePage.setInput(fModel.getRoot());
 			}
 			firePropertyChange(PROP_DIRTY);
 			activateActions();
@@ -687,7 +684,6 @@ public class ZipEditor extends EditorPart implements IPropertyChangeListener, IE
 
 	public void updateView(int mode, boolean savePreferences) {
 		Composite parent = fZipViewer.getControl().getParent();
-		ISelection selection = fZipViewer.getSelection();
 		((ZipContentProvider) fZipViewer.getContentProvider()).disposeModel(false);
 		Control[] children = parent.getChildren();
 		for (int i = 0; i < children.length; i++) {
@@ -696,7 +692,6 @@ public class ZipEditor extends EditorPart implements IPropertyChangeListener, IE
 			children[i].dispose();
 		}
 		createContent(parent, mode);
-		fZipViewer.setSelection(selection);
 		fZipViewer.getControl().setFocus();
 		((ZipContentProvider) fZipViewer.getContentProvider()).disposeModel(true);
 	}
@@ -704,7 +699,8 @@ public class ZipEditor extends EditorPart implements IPropertyChangeListener, IE
 	private StructuredViewer createZipViewer(Composite parent, int mode) {
 		StructuredViewer viewer = null;
 		if ((mode & PreferenceConstants.VIEW_MODE_TREE) > 0) {
-			viewer = new TreeViewer(parent);
+			viewer = new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER | SWT.VIRTUAL);
+			viewer.setUseHashlookup(true);
 		} else {
 			viewer = createTableViewer(parent);
 		}
@@ -832,8 +828,6 @@ public class ZipEditor extends EditorPart implements IPropertyChangeListener, IE
 			((ZipLabelProvider) viewer.getLabelProvider()).resetOrder();
 			createColumns = false;
 		}
-		if (fFrameList != null)
-			viewer.refresh(true);
 	}
 
 	private void setViewerInputAgain(final StructuredViewer viewer){

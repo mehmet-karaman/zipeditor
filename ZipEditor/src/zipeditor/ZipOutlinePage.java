@@ -16,6 +16,7 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.StructuredViewer;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.FileTransfer;
 import org.eclipse.swt.dnd.Transfer;
@@ -72,7 +73,8 @@ public class ZipOutlinePage extends ContentOutlinePage {
 
 	public void createControl(Composite parent) {
 		super.createControl(parent);
-		getTreeViewer().setContentProvider(new ZipContentProvider(PreferenceConstants.VIEW_MODE_TREE));
+		getTreeViewer().setUseHashlookup(true);
+		getTreeViewer().setContentProvider(new LazyZipContentProvider(PreferenceConstants.VIEW_MODE_TREE));
 		getTreeViewer().setLabelProvider(new ZipLabelProvider());
 		getTreeViewer().setComparator(new ZipSorter(PreferenceConstants.PREFIX_OUTLINE));
 		getTreeViewer().setComparer(new NodeComparer());
@@ -89,6 +91,11 @@ public class ZipOutlinePage extends ContentOutlinePage {
 		getTreeViewer().getControl().setMenu(contextMenu);
 
 		initDragAndDrop(getTreeViewer());
+	}
+	
+	@Override
+	protected int getTreeStyle() {
+		return super.getTreeStyle() | SWT.VIRTUAL;
 	}
 
 	private void createActions() {
@@ -166,14 +173,6 @@ public class ZipOutlinePage extends ContentOutlinePage {
 
 	public Object getInput() {
 		return getTreeViewer().getInput();
-	}
-
-	public void refresh() {
-		if (getTreeViewer() == null || getTreeViewer().getControl().isDisposed())
-			return;
-		getTreeViewer().getControl().setRedraw(false);
-		getTreeViewer().refresh();		
-		getTreeViewer().getControl().setRedraw(true);
 	}
 
 	public boolean isLinkingEnabled() {

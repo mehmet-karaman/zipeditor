@@ -46,8 +46,8 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 
+import zipeditor.LazyZipContentProvider;
 import zipeditor.PreferenceConstants;
-import zipeditor.ZipContentProvider;
 import zipeditor.ZipEditorPlugin;
 import zipeditor.ZipLabelProvider;
 import zipeditor.ZipSorter;
@@ -204,7 +204,7 @@ public class OutlineInformationControl implements IInformationControl,
 		TableViewer viewer = new TableViewer(shell, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.VIRTUAL);
 		viewer.getControl().setLayoutData(new GridData(GridData.FILL_BOTH));
 		// with the lazy provider, filtering is bypassed
-		viewer.setContentProvider(new ZipContentProvider(PreferenceConstants.VIEW_MODE_FOLDERS_ONE_LAYER));
+		viewer.setContentProvider(new LazyZipContentProvider(PreferenceConstants.VIEW_MODE_FOLDERS_ONE_LAYER));
 		viewer.setLabelProvider(new ZipLabelProvider());
 		viewer.setComparator(new ZipSorter(PREFERENCE_SORTER));
 		viewer.setComparer(comparer);
@@ -363,11 +363,11 @@ public class OutlineInformationControl implements IInformationControl,
 	}
 
 	public boolean restoresSize() {
-		return true;
+		return false;
 	}
 
 	public boolean restoresLocation() {
-		return true;
+		return false;
 	}
 
 	public void setInput(Object input) {
