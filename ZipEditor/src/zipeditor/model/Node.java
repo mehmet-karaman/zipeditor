@@ -10,9 +10,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.PlatformObject;
@@ -21,6 +23,8 @@ import org.eclipse.ui.model.IWorkbenchAdapter;
 public abstract class Node extends PlatformObject {
 	protected Node parent;
 	protected List children;
+	private Node[] childArray;
+	private Map childByName;
 	protected int state;
 	protected String name;
 	protected long time;
@@ -173,21 +177,24 @@ public abstract class Node extends PlatformObject {
 	}
 
 	public Node[] getChildren() {
-		return children != null ? (Node[]) children.toArray(new Node[children.size()]) : new Node[0];
+		if (children != null) {
+			if (childArray == null)
+				childArray = (Node[]) children.toArray(new Node[0]);
+			return childArray;
+		}
+		return new Node[0];
 	}
 
 	public Node getChildByName(String name, boolean deep) {
 		if (children == null)
 			return null;
-		for (int i = 0, n = children.size(); i < n; i++) {
-			Node child = (Node) children.get(i);
-			if (child.name.equals(name))
-				return child;
-		}
+		Node child = (Node) childByName.get(name);
+		if (child != null)
+			return child;
 		if (!deep)
 			return null;
 		for (int i = 0, n = children.size(); i < n; i++) {
-			Node child = (Node) children.get(i);
+			child = (Node) children.get(i);
 			Node result = child.getChildByName(name, deep);
 			if (result != null)
 				return result;
@@ -256,25 +263,32 @@ public abstract class Node extends PlatformObject {
 		}
 	}
 
-	private void internalAdd(Node node, int atIndex) {
+	private void internalAdd(Node node, int atIndex, boolean notify, boolean resetPath) {
 		node.parent = this;
-		if (children == null)
+		if (children == null) {
 			children = new ArrayList();
+			childByName = new HashMap();
+		}
 		if (atIndex < 0)
 			atIndex = children.size();
 		children.add(atIndex, node);
+		childByName.put(node.name, node);
+		if (childArray != null)
+			childArray = null;
 		model.setDirty(true);
-		model.notifyListeners();
-		node.resetPathCache();
+		if (notify)
+			model.notifyListeners();
+		if (resetPath)
+			node.resetPathCache();
 	}
 
-	public void add(Node node, Node beforeSibling) {
-		internalAdd(node, children != null && beforeSibling != null ? children.indexOf(beforeSibling) : -1);
+	public void add(Node node, Node beforeSibling, boolean notify, boolean resetPath) {
+		internalAdd(node, children != null && beforeSibling != null ? children.indexOf(beforeSibling) : -1, notify, resetPath);
 	}
 	
 	public void add(File file, Node beforeSibling, IProgressMonitor monitor) {
 		Node node = create(model, file.getName(), file.isDirectory());
-		add(node, beforeSibling);
+		add(node, beforeSibling, true, true);
 		node.state |= ADDED;
 		if (node.isFolder()) {
 			node.time = file.lastModified();

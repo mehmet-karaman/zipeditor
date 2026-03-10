@@ -14,11 +14,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.CRC32;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
@@ -208,12 +210,12 @@ public class ZipModel {
 		if (path != null && path.length() >= 10000000) {
 			Thread initThread = new Thread(Messages.getFormattedString("ZipModel.0", path.getName())) { //$NON-NLS-1$
 				public void run() {
-					initialize(inputStream, null, null);
+					initialize(path, inputStream, null, null);
 				}
 			};
 			initThread.start();
 		} else {
-			initialize(inputStream, null, null);
+			initialize(path, inputStream, null, null);
 		}
 	}
 	
@@ -232,7 +234,7 @@ public class ZipModel {
 			}
 		}
 		try {
-			initialize(inputStream, participant, null);
+			initialize(null, inputStream, participant, null);
 		} finally {
 			if (zipPath != null) {
 				try {
@@ -245,18 +247,32 @@ public class ZipModel {
 		}
 	}
 
-	private void initialize(InputStream inputStream, IModelInitParticipant participant, Node stopNode) {
+	private void initialize(File path, InputStream inputStream, IModelInitParticipant participant, Node stopNode) {
 		state |= INITIALIZING;
 		initTime = System.currentTimeMillis();
 		InputStream zipStream = inputStream;
+		ZipFile zipFile = null;
 		try {
 			zipStream = detectStream(inputStream);
+			Enumeration zipEn = null;
+			if (path != null && path.exists() && type == ContentTypeId.ZIP_FILE) {
+				zipStream.close();
+				zipStream = null;
+				zipFile = new ZipFile(path);
+				zipEn = zipFile.entries();
+			}
 			root = getRoot(zipStream);
-			readStream(zipStream, participant, stopNode);
+			readStream(zipEn, zipStream, participant, stopNode);
 		} catch (IOException e) {
 			// ignore
 		} finally {
-			if (zipStream != null && participant == null) {
+			if (zipFile != null) {
+				try {
+					zipFile.close();
+				} catch (IOException e) {
+					logError(e);
+				}
+			} else if (zipStream != null && participant == null) {
 				try {
 					zipStream.close();
 				} catch (IOException e) {
@@ -283,7 +299,7 @@ public class ZipModel {
 		return new ZipRootNode(this);
 	}
 
-	private void readStream(InputStream zipStream, IModelInitParticipant participant, Node stopNode) {
+	private void readStream(Enumeration en, InputStream zipStream, IModelInitParticipant participant, Node stopNode) {
 		ZipEntry zipEntry = null;
 		TarEntry tarEntry = null;
 		RpmEntry rpmEntry = null;
@@ -295,6 +311,8 @@ public class ZipModel {
 				break;
 			}
 			try {
+				if (en != null)
+					zipEntry = en.hasMoreElements() ? (ZipEntry) en.nextElement() : null;
 				if (zipStream instanceof ZipInputStream)
 					zipEntry = ((ZipInputStream) zipStream).getNextEntry();
 				else if (zipStream instanceof TarInputStream)
@@ -343,7 +361,7 @@ public class ZipModel {
 				Node parent = node != null ? node : root;
 				node = parent.getChildByName(pathSeg, false);
 				if (node == null) {
-					parent.add(node = parent.create(this, pathSeg, true), null);
+					parent.add(node = parent.create(this, pathSeg, true), null, true, true);
 					node.time = -1;
 				}
 			}
@@ -366,7 +384,7 @@ public class ZipModel {
 										this, name, isFolder) : new GzipNode(this, name, isFolder);
 				if (isFolder)
 					newChild.state |= Node.PERSISTED;
-				node.add(newChild, null);
+				node.add(newChild, null, false, false);
 				long entrySize = 0;
 				ByteArrayOutputStream out = null;
 				boolean isStopNode = stopNode != null && newChild.getFullPath().equals(stopNode.getFullPath());
@@ -414,7 +432,7 @@ public class ZipModel {
 	}
 
 	public void setNodeContent(Node node, InputStream modelContent) {
-		initialize(modelContent, null, node);
+		initialize(null, modelContent, null, node);
 	}
 
 	private InputStream detectStream(InputStream contents) throws IOException {
@@ -568,7 +586,7 @@ public class ZipModel {
 			newNode = parent.getChildByName(names[i], false);
 			if (newNode == null) {
 				newNode = parent.create(this, names[i], true);
-				parent.add(newNode, null);
+				parent.add(newNode, null, true, true);
 			}
 			parent = newNode;
 		}
@@ -586,7 +604,7 @@ public class ZipModel {
 				name = name.substring(index + 1);
 			} else {
 				list.add(name);
-				name = new String();
+				name = null;
 			}
 		}
 		return (String[]) list.toArray(new String[list.size()]);
