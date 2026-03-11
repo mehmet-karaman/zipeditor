@@ -5,6 +5,7 @@
 package zipeditor.model;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -480,7 +481,7 @@ public class ZipModel {
 				out = new TarOutputStream(new GZIPOutputStream(out));
 				break;
 			case ContentTypeId.ZIP:
-				out = new ZipOutputStream(out);
+				out = new ZipOutputStream(new BufferedOutputStream(out));
 				break;
 			case ContentTypeId.TBZ:
 				out.write(new byte[] { 'B', 'Z' });
