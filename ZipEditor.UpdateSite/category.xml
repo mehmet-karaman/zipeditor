@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature id="zipeditor" version="0.0.0">
+      <category name="ZipEditor"/>
+   </feature>
+   <category-def name="ZipEditor" label="Eclipse ZipEditor">
+      <description>
+         Here you find all available versions of the Eclipse ZipEditor.
+      </description>
+   </category-def>
+</site>
