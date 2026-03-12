@@ -40,7 +40,7 @@ jobs:
           mvn org.eclipse.tycho:tycho-versions-plugin:set-version -DnewVersion="${VERSION}" --batch-mode
 
       - name: Build with Maven Tycho
-        run: mvn clean verify --batch-mode
+        run: xvfb-run mvn clean verify --batch-mode
 
       - name: Prepare upload directory
         env:

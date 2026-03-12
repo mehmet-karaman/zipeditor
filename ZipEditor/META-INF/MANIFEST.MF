@@ -20,5 +20,7 @@ Bundle-RequiredExecutionEnvironment: JavaSE-11
 Eclipse-LazyStart: true
 Bundle-Vendor: %Bundle-Vendor.0
 Export-Package: zipeditor,
+ zipeditor.actions;x-friends:="ZipEditor-test",
  zipeditor.model,
+ zipeditor.operations;x-friends:="ZipEditor-test",
  zipeditor.search
