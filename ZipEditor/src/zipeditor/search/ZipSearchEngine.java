@@ -77,14 +77,14 @@ public class ZipSearchEngine implements IModelInitParticipant {
 					searchPlainFile((File) element, options.isNonArchives(), monitor);
 				} else if (element instanceof IResource) {
 					searchResource((IResource) element, options.isNonArchives(), archiveContentType, monitor);
-				} else if (element instanceof IAdaptable) {
-					element = ((IAdaptable) element).getAdapter(IResource.class);
-					if (element instanceof IResource)
-						searchResource((IResource) element, options.isNonArchives(), archiveContentType, monitor);
 				} else if (element instanceof Node) {
 					Node node = (Node) element;
 					if (node.getModel().getZipPath() != null)
 						model = node.getModel();
+				} else if (element instanceof IAdaptable) {
+					element = ((IAdaptable) element).getAdapter(IResource.class);
+					if (element instanceof IResource)
+						searchResource((IResource) element, options.isNonArchives(), archiveContentType, monitor);
 				}
 			} catch (CoreException e) {
 				ZipEditorPlugin.log(e);
