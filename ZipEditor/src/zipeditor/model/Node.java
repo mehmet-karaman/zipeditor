@@ -273,8 +273,7 @@ public abstract class Node extends PlatformObject {
 			atIndex = children.size();
 		children.add(atIndex, node);
 		childByName.put(node.name, node);
-		if (childArray != null)
-			childArray = null;
+		childArray = null;
 		model.setDirty(true);
 		if (notify)
 			model.notifyListeners();
@@ -326,6 +325,8 @@ public abstract class Node extends PlatformObject {
 		if (children == null)
 			return;
 		children.remove(node);
+		childByName.remove(node.name);
+		childArray = null;
 		model.setDirty(true);
 		model.notifyListeners();
 		node.clear();
