@@ -440,7 +440,6 @@ public class ZipModel {
 		BufferedInputStream in = new BufferedInputStream(contents);
 		type = detectType(in);
 		if (type == null) {
-			type = ContentTypeId.ZIP_FILE;
 			return contents;
 		}
 		switch (type.getOrdinal()) {
@@ -697,7 +696,7 @@ public class ZipModel {
 	}
 	
 	public ContentTypeId getType() {
-		return type;
+		return type != null ? type : ContentTypeId.ZIP_FILE;
 	}
 	
 	int getState() {
