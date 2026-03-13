@@ -178,9 +178,10 @@ public abstract class Node extends PlatformObject {
 
 	public Node[] getChildren() {
 		if (children != null) {
-			if (childArray == null)
-				childArray = (Node[]) children.toArray(new Node[0]);
-			return childArray;
+			Node[] result = childArray; // copy field locally to prevent a race condition 
+			if (result == null)
+				childArray = result = (Node[]) children.toArray(new Node[0]);
+			return result;
 		}
 		return new Node[0];
 	}
@@ -340,6 +341,8 @@ public abstract class Node extends PlatformObject {
 			}
 			children = null;
 		}
+		childArray = null;
+		childByName = null;
 	}
 	
 	public void reset() {
