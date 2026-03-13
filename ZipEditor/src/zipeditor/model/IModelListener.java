@@ -9,11 +9,9 @@ import java.util.EventListener;
 public interface IModelListener extends EventListener {
 	public class ModelChangeEvent {
 		private int fModelState;
-		private Node fModelRoot;
 		
 		public ModelChangeEvent(ZipModel model) {
 			fModelState = model.getState();
-			fModelRoot = model.getRoot();
 		}
 
 		public boolean isInitStarted() {
@@ -26,10 +24,6 @@ public interface IModelListener extends EventListener {
 		
 		public boolean isInitializing() {
 			return (fModelState & ZipModel.INITIALIZING) > 0;
-		}
-		
-		public Node getModelRoot() {
-			return fModelRoot;
 		}
 	};
 
