@@ -85,7 +85,7 @@ public class OutlineInformationControl implements IInformationControl,
 			if (patternString == null || patternString.equals("")) //$NON-NLS-1$
 				fMatcher = null;
 			else
-				fMatcher = new StringMatcher(patternString + "*", true, false); //$NON-NLS-1$
+				fMatcher = new StringMatcher("*" + patternString + "*", true, false); //$NON-NLS-1$
 		}
 
 		protected boolean match(String string) {
@@ -240,11 +240,10 @@ public class OutlineInformationControl implements IInformationControl,
 	
 	protected void handleFilterFieldModified() {
 		fPatternFilter.setPattern(fText.getText());
-		fTableViewer.getTable().setRedraw(false);
+		((LazyZipContentProvider) fTableViewer.getContentProvider()).reset(fTableViewer.getInput());
 		fTableViewer.refresh();
 		if (fText.getText().length() > 0)
 			selectFirstMatch();
-		fTableViewer.getTable().setRedraw(true);
 	}
 	
 	protected void selectFirstMatch() {
@@ -363,7 +362,7 @@ public class OutlineInformationControl implements IInformationControl,
 	}
 
 	public boolean restoresSize() {
-		return false;
+		return true;
 	}
 
 	public boolean restoresLocation() {
