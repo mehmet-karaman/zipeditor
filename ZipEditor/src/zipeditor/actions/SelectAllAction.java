@@ -4,6 +4,8 @@
  */
 package zipeditor.actions;
 
+import org.eclipse.jface.viewers.IStructuredContentProvider;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.StructuredViewer;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TreeViewer;
@@ -21,9 +23,10 @@ public class SelectAllAction extends ViewerAction {
 			((TreeViewer) viewer).getTree().selectAll();
 		else if (viewer instanceof TableViewer)
 			((TableViewer) viewer).getTable().selectAll();
-		if (viewer instanceof ZipTableViewer)
-			((ZipTableViewer) viewer).fireSelectionChanged();
-		else
+		if (viewer instanceof ZipTableViewer) {
+			IStructuredContentProvider contentProvider = (IStructuredContentProvider) viewer.getContentProvider();
+			((ZipTableViewer) viewer).fireSelectionChanged(new StructuredSelection(contentProvider.getElements(viewer.getInput())));
+		} else
 			viewer.setSelection(viewer.getSelection());
 	}
 }
