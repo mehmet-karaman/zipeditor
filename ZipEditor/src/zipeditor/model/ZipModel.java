@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.CRC32;
@@ -79,6 +80,8 @@ public class ZipModel {
 	public final static int INITIALIZING = 0x04;
 	public final static int DIRTY = 0x08;
 
+	private static final byte[] EMPTY_ZIP = {0x50, 0x4b, 0x5, 0x6};
+
 	/** @see: {@link org.apache.tools.tar.TarEntry#parseTarHeader(byte[])} */
 	private static final int TAR_MAGIC_OFFSET = TarConstants.NAMELEN //
 			+ TarConstants.MODELEN //
@@ -101,10 +104,13 @@ public class ZipModel {
 			contents = new BufferedInputStream(contents);
 		try {
 			contents.mark(1000000); // an entry which exceeds this limit cannot be detected
-			int count = contents.read();
+			byte[] buf = new byte[4];
+			int count = contents.read(buf);
 			contents.reset();
 			if (count == -1)
 				return null;
+			if (Arrays.equals(EMPTY_ZIP, buf))
+				return ContentTypeId.ZIP_FILE;
 			ZipInputStream zip = new ZipInputStream(contents);
 			if (zip.getNextEntry() != null) {
 				contents.reset();
