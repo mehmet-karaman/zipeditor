@@ -4,6 +4,7 @@
  */
 package zipeditor.actions;
 
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.StructuredViewer;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
@@ -23,6 +24,7 @@ public class DeleteAction extends ViewerAction {
 		for (int i = 0; i < nodes.length; i++) {
 			nodes[i].getParent().remove(nodes[i]);
 		}
+		getViewer().setSelection(StructuredSelection.EMPTY);
 	}
 
 }
