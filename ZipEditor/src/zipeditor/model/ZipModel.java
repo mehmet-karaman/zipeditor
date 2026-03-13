@@ -24,8 +24,10 @@ import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.tools.bzip2.CBZip2InputStream;
 import org.apache.tools.bzip2.CBZip2OutputStream;
 import org.apache.tools.tar.TarConstants;
@@ -95,7 +97,7 @@ public class ZipModel {
 
 	/**
 	 * Returns null for an empty stream
-	 * 
+	 *
 	 * @param contents
 	 * @return
 	 */
@@ -225,7 +227,7 @@ public class ZipModel {
 			initialize(path, inputStream, null, null);
 		}
 	}
-	
+
 	public void logError(Object message) {
 		IStatus status = ZipEditorPlugin.log(message);
 		if (errorReporter != null)
@@ -345,7 +347,7 @@ public class ZipModel {
 				if (isNoEntry && parentNodes != null && parentNodes.size() > 0)
 					zipName = ((Node) parentNodes.get(parentNodes.size() - 1)).getName();
 			}
-			// 2. a nested gzip or bzip2 node is is extracted or opened from a search result, the stopNode knows its nesting structure 
+			// 2. a nested gzip or bzip2 node is is extracted or opened from a search result, the stopNode knows its nesting structure
 			if (isNoEntry && (stopNode instanceof GzipNode || stopNode instanceof Bzip2Node) && stopNode.getParentNodes() != null)
 				zipName = ((Node) stopNode.getParentNodes().get(stopNode.getParentNodes().size() - 1)).getName();
 			String entryName = zipName;
@@ -548,7 +550,7 @@ public class ZipModel {
 				tarEntry.setMode(TarEntry.DEFAULT_FILE_MODE);
 			}
 		}
-		
+
 		if (out instanceof ZipOutputStream)
 			((ZipOutputStream) out).putNextEntry(zipEntry);
 		else if (out instanceof TarOutputStream)
@@ -615,15 +617,15 @@ public class ZipModel {
 		}
 		return (String[]) list.toArray(new String[list.size()]);
 	}
-	
+
 	public void addModelListener(IModelListener listener) {
 		listenerList.add(listener);
 	}
-	
+
 	public void removeModelListener(IModelListener listener) {
 		listenerList.remove(listener);
 	}
-	
+
 	protected void notifyListeners() {
 		Object[] listeners = listenerList.getListeners();
 		if (listeners.length > 0) {
@@ -642,7 +644,7 @@ public class ZipModel {
 		if (ZipEditorPlugin.DEBUG)
 			System.out.println(zipPath + " disposed"); //$NON-NLS-1$
 	}
-	
+
 	private void deleteTempDir(final File tmpDir) {
 		if (deleteFile(tmpDir))
 			return;
@@ -700,11 +702,11 @@ public class ZipModel {
 	public RootNode getRoot() {
 		return root;
 	}
-	
+
 	public ContentTypeId getType() {
 		return type != null ? type : ContentTypeId.ZIP_FILE;
 	}
-	
+
 	int getState() {
 		return state;
 	}
@@ -716,7 +718,7 @@ public class ZipModel {
 	public boolean isDirty() {
 		return (state & DIRTY) > 0;
 	}
-	
+
 	public void setDirty(boolean dirty) {
 		if (dirty) {
 			if (!isInitializing())
@@ -725,7 +727,7 @@ public class ZipModel {
 			state &= -1 ^ DIRTY;
 		}
 	}
-	
+
 	public boolean isReadonly() {
 		return readonly;
 	}
@@ -733,7 +735,7 @@ public class ZipModel {
 	public File getZipPath() {
 		return zipPath;
 	}
-	
+
 	public Node findNode(String path) {
 		String[] names = splitName(path);
 		Node node = root;
