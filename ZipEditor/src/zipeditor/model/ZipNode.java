@@ -4,19 +4,19 @@
  */
 package zipeditor.model;
 
-import org.apache.commons.compress.archivers.zip.ZipFile;
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
 public class ZipNode extends Node {
 	private class EntryStream extends InputStream {
 		private InputStream in;
 		private ZipFile zipFile;
-		private EntryStream(ZipArchiveEntry entry, ZipFile zipFile) throws IOException {
-			ZipArchiveEntry zipArcEntry = zipFile.getEntry(entry.getName());
-			in = zipFile.getInputStream(zipArcEntry);
+		private EntryStream(ZipEntry entry, ZipFile zipFile) throws IOException {
+			in = zipFile.getInputStream(entry);
 			this.zipFile = zipFile;
 		}
 		public int read() throws IOException {
@@ -30,10 +30,10 @@ public class ZipNode extends Node {
 	};
 
 	private String comment;
-	private ZipArchiveEntry zipEntry;
+	private ZipEntry zipEntry;
 	private int method = ZipEntry.DEFLATED;
 
-	public ZipNode(ZipModel model, ZipArchiveEntry entry, String name, boolean isFolder) {
+	public ZipNode(ZipModel model, ZipEntry entry, String name, boolean isFolder) {
 		this(model, name, isFolder);
 		update(entry);
 	}
@@ -85,7 +85,22 @@ public class ZipNode extends Node {
 		if (in != null)
 			return in;
 		if (zipEntry != null) {
-			return model.getZipPath() != null ? new EntryStream(zipEntry, ZipFile.builder().setFile(model.getZipPath()).get()) : null;
+			ZipRootNode root = (ZipRootNode) model.getRoot();
+			in = root.getFor(zipEntry);
+			if (in != null)
+				return in;
+			if (model.getZipPath() != null) {
+				ZipFile zipFile = model.createZipFile(model.getZipPath());
+				if (zipFile != null)
+					return new EntryStream(zipEntry, zipFile);
+				ZipInputStream zin = new ZipInputStream(new FileInputStream(model.getZipPath()));
+				for (ZipEntry entry; (entry = zin.getNextEntry()) != null;) {
+					if (entry.getName().equals(zipEntry.getName()))
+						return zin;
+				}
+				zin.close();
+			}
+				
 		}
 		return null;
 	}
@@ -99,8 +114,8 @@ public class ZipNode extends Node {
 	}
 	
 	public void update(Object entry) {
-		if (entry instanceof ZipArchiveEntry) {
-			zipEntry = (ZipArchiveEntry) entry;
+		if (entry instanceof ZipEntry) {
+			zipEntry = (ZipEntry) entry;
 			time = zipEntry.getTime();
 			size = zipEntry.getSize();
 			comment = zipEntry.getComment();

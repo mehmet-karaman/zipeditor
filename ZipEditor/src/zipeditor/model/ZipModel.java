@@ -22,11 +22,11 @@ import java.util.zip.CRC32;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.tools.bzip2.CBZip2InputStream;
 import org.apache.tools.bzip2.CBZip2OutputStream;
@@ -267,8 +267,11 @@ public class ZipModel {
 			if (path != null && path.exists() && type == ContentTypeId.ZIP_FILE) {
 				zipStream.close();
 				zipStream = null;
-				zipFile = new ZipFile(path);
-				zipEn = zipFile.entries();
+				zipFile = createZipFile(path);
+				if (zipFile != null)
+					zipEn = zipFile.entries();
+				else
+					zipStream = new ZipInputStream(new FileInputStream(path));
 			}
 			root = getRoot(zipStream);
 			readStream(zipEn, zipStream, participant, stopNode);
@@ -294,6 +297,16 @@ public class ZipModel {
 			state &= -1 ^ INIT_FINISHED;
 			if (ZipEditorPlugin.DEBUG)
 				System.out.println(zipPath + " initialized in " + (System.currentTimeMillis() - initTime) + "ms"); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+	}
+
+	protected ZipFile createZipFile(File path) throws IOException, ZipException {
+		try {
+			return new ZipFile(path);
+		} catch (ZipException e) {
+			if (!e.getMessage().contains("Invalid CEN header")) //$NON-NLS-1$
+				throw e;
+			return null;
 		}
 	}
 
@@ -488,7 +501,7 @@ public class ZipModel {
 				out = new TarOutputStream(new GZIPOutputStream(out));
 				break;
 			case ContentTypeId.ZIP:
-				out = new ZipOutputStream(new BufferedOutputStream(out));
+				out = new ZipArchiveOutputStream(new BufferedOutputStream(out));
 				break;
 			case ContentTypeId.TBZ:
 				out.write(new byte[] { 'B', 'Z' });
@@ -517,7 +530,7 @@ public class ZipModel {
 		if (node instanceof RootNode || monitor.isCanceled())
 			return;
 
-		String entryName = node.getPath() + node.getName();
+		String entryName = node.getFullPath();
 		if (node.isFolder()) {
 			if (!node.isPersistedFolder())
 				return;
@@ -551,11 +564,13 @@ public class ZipModel {
 			}
 		}
 
-		if (out instanceof ZipOutputStream)
-			((ZipOutputStream) out).putNextEntry(zipEntry);
+		if (out instanceof ZipArchiveOutputStream)
+			((ZipArchiveOutputStream) out).putArchiveEntry(new ZipArchiveEntry(zipEntry));
 		else if (out instanceof TarOutputStream)
 			((TarOutputStream) out).putNextEntry(tarEntry);
 		Utils.readAndWrite(node.getContent(), out, false);
+		if (zipEntry != null)
+			((ZipArchiveOutputStream) out).closeArchiveEntry();
 		if (tarEntry != null)
 			((TarOutputStream) out).closeEntry();
 		monitor.worked(1);

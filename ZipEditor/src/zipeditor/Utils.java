@@ -243,6 +243,10 @@ public class Utils {
 	}
 
 	public static void readAndWrite(InputStream in, OutputStream out, boolean closeOut) throws IOException {
+		readAndWrite(in, out, true, closeOut);
+	}
+
+	public static void readAndWrite(InputStream in, OutputStream out, boolean closeIn, boolean closeOut) throws IOException {
 		try {
 			if (in != null) {
 				byte[] buf = new byte[8000];
@@ -251,7 +255,7 @@ public class Utils {
 				}
 			}
 		} finally {
-			if (in != null)
+			if (in != null && closeIn)
 				in.close();
 			if (closeOut)
 				out.close();
