@@ -18,8 +18,7 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.search,
  org.apache.ant,
  org.apache.commons.commons-io,
- org.apache.commons.commons-compress,
- org.apache.commons.lang3
+ org.apache.commons.commons-compress
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy
 Bundle-Vendor: %Bundle-Vendor.0
