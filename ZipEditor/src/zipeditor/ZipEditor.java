@@ -1114,7 +1114,8 @@ public class ZipEditor extends EditorPart implements IPropertyChangeListener, IE
 			}
 			getEditorSite().getShell().getDisplay().asyncExec(new Runnable() {
 				public void run() {
-					fOutlinePage.setInput(fModel.getRoot());
+					if (fOutlinePage != null)
+						fOutlinePage.setInput(fModel.getRoot());
 				}
 			});
 			return fOutlinePage;
