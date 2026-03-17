@@ -4,18 +4,15 @@
  */
 package zipeditor.model;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
 
 public class ZipNode extends Node {
 	private class EntryStream extends InputStream {
 		private InputStream in;
-		private ZipFile zipFile;
-		private EntryStream(ZipEntry entry, ZipFile zipFile) throws IOException {
+		private ZipReadFacade zipFile;
+		private EntryStream(ZipEntry entry, ZipReadFacade zipFile) throws IOException {
 			in = zipFile.getInputStream(entry);
 			this.zipFile = zipFile;
 		}
@@ -90,13 +87,17 @@ public class ZipNode extends Node {
 			if (in != null)
 				return in;
 			if (model.getZipPath() != null) {
-				ZipFile zipFile = model.createZipFile(model.getZipPath());
-				if (zipFile != null)
+				try {
+					ZipReadFacade zipFile = ZipReadFacade.open(model);
 					return new EntryStream(zipEntry, zipFile);
-				ZipInputStream zin = new ZipInputStream(new FileInputStream(model.getZipPath()));
+				} catch (IOException e) {
+					// fallback to sequential scanning
+				}
+				ZipImplFacade zin = ZipImplFacade.openForModelPath(model);
 				for (ZipEntry entry; (entry = zin.getNextEntry()) != null;) {
-					if (entry.getName().equals(zipEntry.getName()))
+					if (entry.getName().equals(zipEntry.getName())) {
 						return zin;
+					}
 				}
 				zin.close();
 			}

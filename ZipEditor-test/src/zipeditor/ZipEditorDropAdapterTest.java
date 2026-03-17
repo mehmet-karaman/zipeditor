@@ -18,6 +18,7 @@ import org.eclipse.swt.dnd.DropTarget;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.FileTransfer;
 import org.eclipse.swt.dnd.TransferData;
+import org.eclipse.swt.internal.ole.win32.FORMATETC;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 import org.junit.Test;
@@ -52,6 +53,7 @@ public class ZipEditorDropAdapterTest {
 				ZipEditorDropAdapter adapter = new ZipEditorDropAdapter(viewer);
 
 				TransferData transferData = new TransferData();
+				transferData.formatetc = new FORMATETC();
 				assertFalse(adapter.validateDrop(null, DND.DROP_COPY, transferData));
 			} finally {
 				shell.dispose();

@@ -18,7 +18,9 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.search,
  org.apache.ant,
  org.apache.commons.commons-io,
- org.apache.commons.commons-compress
+ org.apache.commons.commons-compress,
+ io.airlift.aircompressor;bundle-version="2.0.2",
+ com.github.luben.zstd-jni;bundle-version="1.5.7"
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy
 Bundle-Vendor: %Bundle-Vendor.0
@@ -26,4 +28,5 @@ Export-Package: zipeditor,
  zipeditor.actions;x-friends:="ZipEditor-test",
  zipeditor.model,
  zipeditor.operations;x-friends:="ZipEditor-test",
+ zipeditor.preferences,
  zipeditor.search
