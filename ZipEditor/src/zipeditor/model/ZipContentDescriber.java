@@ -31,8 +31,10 @@ public class ZipContentDescriber implements IContentDescriber {
 		public final static int BZ2 = 5;
 		public final static int TBZ = 6;
 		public final static int RPM = 7;
+		public final static int ZIP_ZSTD = 8;
 
 		public final static ContentTypeId ZIP_FILE = add("zipfile", ContentTypeId.ZIP); //$NON-NLS-1$
+		public final static ContentTypeId ZIP_ZSTD_FILE = add("zipfile", ContentTypeId.ZIP_ZSTD); //$NON-NLS-1$
 		public final static ContentTypeId GZ_FILE = add("gzipfile", ContentTypeId.GZ); //$NON-NLS-1$
 		public final static ContentTypeId TAR_FILE = add("tarfile", ContentTypeId.TAR); //$NON-NLS-1$
 		public final static ContentTypeId TGZ_FILE = add("targzfile", ContentTypeId.TGZ); //$NON-NLS-1$

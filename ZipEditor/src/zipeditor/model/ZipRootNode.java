@@ -12,14 +12,12 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
 
 import zipeditor.Utils;
 
 public class ZipRootNode extends RootNode {
 
-	private ZipFile zipFile;
+	private ZipReadFacade zipFile;
 	private Map entryToContent;
 
 	public ZipRootNode(ZipModel model) {
@@ -40,15 +38,20 @@ public class ZipRootNode extends RootNode {
 	public Object accept(NodeVisitor visitor, Object argument) throws IOException {
 		// this is relevant when saving to a previously empty file
 		if (model.getZipPath().length() > 0) {
-			zipFile = model.createZipFile(model.getZipPath());
+			try {
+				zipFile = ZipReadFacade.open(model);
+			} catch (IOException e) {
+				zipFile = null;
+			}
 			if (zipFile == null) {
 				entryToContent = new HashMap();
-				ZipInputStream in = new ZipInputStream(new FileInputStream(model.getZipPath()));
+				ZipImplFacade in = ZipImplFacade.openForModel(model, new FileInputStream(model.getZipPath()));
 				for (ZipEntry entry; (entry = in.getNextEntry()) != null;) {
 					ByteArrayOutputStream bos = new ByteArrayOutputStream();
 					Utils.readAndWrite(in, bos, false, true);
 					entryToContent.put(entry.getName(), bos.toByteArray());
 				}
+				in.close();
 			}
 		}
 		try {
@@ -65,5 +68,31 @@ public class ZipRootNode extends RootNode {
 
 	public Node create(ZipModel model, String name, boolean isFolder) {
 		return new ZipNode(model, name, isFolder);
+	}
+	
+	/**
+	 * This method can be used to check if new compression methods can be used without doubts.
+	 *  
+	 * @param zipMethod the compression method to check
+	 * @return true if the given zipMethod was already used in this node model, else false.
+	 */
+	public boolean hasContentWithCompression(int zipMethod) {
+		return hasContentWithCompression(this, zipMethod);
+	}
+
+	private boolean hasContentWithCompression(Node parentNode, int zipMethod) {
+		for (Node node : parentNode.getChildren()) {
+			if (!(node instanceof ZipNode)) {
+				continue;
+			}
+			ZipNode zipNode = (ZipNode) node;
+			if (zipNode.getMethod() == zipMethod) {
+				return true;
+			}
+			if (hasContentWithCompression(zipNode, zipMethod)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

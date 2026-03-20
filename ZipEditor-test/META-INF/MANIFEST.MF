@@ -18,7 +18,9 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.swtbot.junit4_x,
  org.hamcrest.core,
  org.apache.commons.commons-io,
- org.apache.commons.commons-compress
+ org.apache.commons.commons-compress;bundle-version="[1.28.0,1.28.0]",
+ io.airlift.aircompressor;bundle-version="2.0.2",
+ com.github.luben.zstd-jni;bundle-version="1.5.7"
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Eclipse-LazyStart: false
 Bundle-Vendor: %Bundle-Vendor.0

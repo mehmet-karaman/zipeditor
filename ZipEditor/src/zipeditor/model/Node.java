@@ -16,6 +16,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.compress.archivers.zip.ZipMethod;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -297,8 +298,12 @@ public abstract class Node extends PlatformObject {
 		internalAdd(node, children != null && beforeSibling != null ? children.indexOf(beforeSibling) : -1, notify, resetPath);
 	}
 	
-	public void add(File file, Node beforeSibling, IProgressMonitor monitor) {
+	public void add(File file, Node beforeSibling, IProgressMonitor monitor, boolean useZstdCompression) {
 		Node node = create(model, file.getName(), file.isDirectory());
+		if (useZstdCompression && node instanceof ZipNode) {
+			ZipNode zipNode = (ZipNode) node;
+			zipNode.setMethod(ZipMethod.ZSTD.getCode());
+		}
 		add(node, beforeSibling, true, true);
 		node.state |= ADDED;
 		if (node.isFolder()) {
@@ -309,7 +314,7 @@ public abstract class Node extends PlatformObject {
 					if (monitor.isCanceled())
 						break;
 					monitor.subTask(files[i].getName());
-					node.add(files[i], null, monitor);
+					node.add(files[i], null, monitor, useZstdCompression);
 				}
 			}
 			node.state |= MODIFIED;

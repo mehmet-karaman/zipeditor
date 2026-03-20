@@ -227,7 +227,7 @@ public class ZipEditorUITest {
 
 		// Add file directly to the model (bypassing the async AddOperation)
 		PlatformUI.getWorkbench().getDisplay().syncExec(() -> {
-			rootNode.add(fileToAdd.toFile(), null, new org.eclipse.core.runtime.NullProgressMonitor());
+			rootNode.add(fileToAdd.toFile(), null, new org.eclipse.core.runtime.NullProgressMonitor(), false);
 		});
 
 		// Verify the model was updated
@@ -292,7 +292,7 @@ public class ZipEditorUITest {
 
 		// Add and refresh on UI thread
 		PlatformUI.getWorkbench().getDisplay().syncExec(() -> {
-			rootNode.add(fileToAdd.toFile(), null, new org.eclipse.core.runtime.NullProgressMonitor());
+			rootNode.add(fileToAdd.toFile(), null, new org.eclipse.core.runtime.NullProgressMonitor(), false);
 			viewer.setInput(viewer.getInput());
 		});
 		Thread.sleep(500);
@@ -353,7 +353,7 @@ public class ZipEditorUITest {
 		final String fileName = fileToAdd.toFile().getName();
 
 		PlatformUI.getWorkbench().getDisplay().syncExec(() -> {
-			rootNode.add(fileToAdd.toFile(), null, new org.eclipse.core.runtime.NullProgressMonitor());
+			rootNode.add(fileToAdd.toFile(), null, new org.eclipse.core.runtime.NullProgressMonitor(), false);
 			viewer.setInput(viewer.getInput());
 		});
 		Thread.sleep(500);
